@@ -1,9 +1,8 @@
 import json
 import wikipediaapi
 
+
 wiki_wiki = wikipediaapi.Wikipedia('en')
-
-
 
 def get_country_official_name():
     with open('countries.json', encoding='utf-8') as countries_data:
@@ -17,36 +16,35 @@ def get_country_official_name():
 
 class WikiIterator:
 
-    def __init__(self, object, start=int, end=int):
-        self.start = start
-        self.end = end
-        self.current = start - 1 #пока нигде не применяю
-        self.object = object
+    def __init__(self, start=0, end=len(get_country_official_name())-1):
+        self.start = start #взять объект оп индерсу в списке
+        self.end = end # последний по индексу
+        self.current = start
+        self.country_list = get_country_official_name()
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        self.start += 1
-        if self.start == self.end:
+        self.current += 1
+        if self.current > self.end:
             raise StopIteration
-        return self.start
+        self.link = self.get_link(self.country_list[self.current])
+        return {self.country_list[self.current]: self.link}
+
+    def get_link(self, country):
+
+        try:
+            page_py = wiki_wiki.page(country)
+            return page_py.fullurl
+
+        except KeyError:
+            return ('Has no link in Wiki')
 
 
+classes_countries_links = []
+for item in WikiIterator():
+    classes_countries_links.append(item)
 
-
-
-for item in WikiIterator(get_country_official_name()):
-    print(item)
-'''
-в списке стран бежим по индексу
-Берем название и суем его в апи вики для получения ссылки
-полученый результат собираем в словарь: Страна - ссылка
-словарь аппендим в список
-Список дампим в Джсон - готово
-'''
-
-    # with open('countries_links.json', 'w') as fi:
-    #     json.dump(countries_links_list, fi, ensure_ascii=False, indent=2)
-
-# print(get_country_official_name())
+with open('classes_countries_links.json', 'w') as fi:
+    json.dump(classes_countries_links, fi, ensure_ascii=False, indent=2)
